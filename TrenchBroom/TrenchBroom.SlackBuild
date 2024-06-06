@@ -1,0 +1,131 @@
+#!/bin/bash
+
+# Slackware build script for TrenchBroom
+
+# Copyright 2024 Glenn Armstrong, Sydney, AUSTRALIA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=TrenchBroom
+VERSION=${VERSION:-2024.1}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar -xvf $CWD/v$VERSION.tar.gz
+cd $PRGNAM-$VERSION
+
+SRC_DIR=$PWD
+
+# build scripts make use of vcpkg for all dependencies and requires
+# and active internet connection, disable and use system libraries
+if [ "${USE_VCPKG:-no}" == "yes" ]; then
+	# vcpkg must have a .git folder or will fail to bootstrap
+	VCPKG_VER=2024.05.24
+	git clone --branch $VCPKG_VER https://github.com/microsoft/vcpkg.git
+else
+	patch -p0 < $CWD/disable_vcpkg.patch
+fi
+
+#patch -p0 < $CWD/disable_docs.patch
+#patch -p0 < $CWD/nopandoc.patch
+
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
+
+mkdir -p build
+cd build
+BUILD_DIR=$PWD
+
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="cmake/packages"
+
+# set an offscreen platform so tests wont fail without a running x server
+QT_QPA_PLATFORM=offscreen cmake --build . --target TrenchBroom -- -j6
+
+EXE_DIR=$PKG/opt/$PRGNAM/
+mkdir -p $PKG/opt/$PRGNAM
+
+cp $BUILD_DIR/app/trenchbroom $EXE_DIR
+cp -r $BUILD_DIR/app/{shader,stylesheets,defaults,fonts,games,linux,images} $EXE_DIR
+mkdir -p $EXE_DIR/manual
+cp -r $BUILD_DIR/app/gen-manual/* $EXE_DIR/manual/
+
+install -D -m 0644 $SRC_DIR/app/resources/linux/icons/icon_256.png \
+	$PKG/usr/share/pixmaps/$PRGNAM.png
+
+mkdir -p $PKG/usr/share/applications
+cat << EOF > $PKG/usr/share/applications/$PRGNAM.desktop
+[Desktop Entry]
+Version=1.0
+Type=Application
+Exec=/opt/$PRGNAM/trenchbroom
+Name=TrenchBroom
+GenericName=TrenchBroom
+Comment=TrenchBroom is a modern cross-platform level editor for Quake-engine based games
+Icon=$PRGNAM
+StartupNotify=true
+Categories=Game;
+Terminal=false
+StartupWMClass=TrenchBroom
+EOF
+
+DOCS="LICENSE.txt README.md"
+
+cd $SRC_DIR
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a \
+  $DOCS \
+  $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+           |-----handy-ruler------------------------------------------------------|
+TrenchBroom: TrenchBroom (level editor)
+TrenchBroom:
+TrenchBroom: TrenchBroom is a free (GPLv3+), cross platform level editor for 
+TrenchBroom: Quake-engine based games. It supports Quake, Quake 2, and Hexen 2 
+TrenchBroom: and runs on Windows (XP and newer), Mac OS X (10.6 and newer) and 
+TrenchBroom: Linux. TrenchBroom is easy to use and provides many simple and
+TrenchBroom: advanced tools to create complex and interesting levels with ease.
+TrenchBroom:
+TrenchBroom:
+TrenchBroom:
+TrenchBroom:
