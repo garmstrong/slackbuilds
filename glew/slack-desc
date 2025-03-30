@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+     |-----handy-ruler------------------------------------------------------|
+miniz: miniz (lossless, high performance data compression library)
+miniz:
+miniz: Miniz is a lossless, high performance data compression library in a 
+miniz: single source file that implements the zlib (RFC 1950) and Deflate 
+miniz: (RFC 1951) compressed data format specification standards. It 
+miniz: supports the most commonly used functions exported by the zlib
+miniz: library, but is  a completely independent implementation so zlib's 
+miniz: licensing requirements do not apply. Miniz also contains simple to
+miniz: use functions for writing .PNG format image files and 
+miniz: reading/writing/appending .ZIP format archives. 
+miniz:
